@@ -49,10 +49,7 @@ app.get('/meet', async (req, res) => {
         <h1>🎉 Welcome! 🎉</h1>
         <h2>You have been fooled!</h2>
         <img src="${FUNKY_IMAGE_URL}" alt="Funky Image" style="width:50%; max-width:400px; border-radius:10px; margin:20px 0;">
-        <p><strong>Your location:</strong> ${locationData.city}, ${locationData.regionName}, ${locationData.country}</p>
-        <p><strong>IP Address:</strong> ${ip}</p>
-        <p><strong>Time of visit:</strong> ${timestamp}</p>
-        <p><strong>User Agent:</strong> ${userAgent}</p>
+      
       </body>
     </html>
   `);
