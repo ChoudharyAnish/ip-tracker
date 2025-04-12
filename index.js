@@ -5,7 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 // Path to your funky image (can be a URL or a local file path)
-const FUNKY_IMAGE_URL = 'https://st.depositphotos.com/2195902/5037/v/450/depositphotos_50370695-stock-illustration-funny-monkey-with-glasses.jpg'; // Replace with your funky image URL
+const FUNKY_IMAGE_URL = 'https://images.unsplash.com/photo-1741866987680-5e3d7f052b87?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'; // Replace with your funky image URL
 
 // Helper function to extract the real IP address
 function getRealIP(req) {
