@@ -4,7 +4,7 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-const FUNKY_IMAGE_URL = 'https://images.unsplash.com/photo-1741866987680-5e3d7f052b87?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
+const FUNKY_IMAGE_URL = 'https://media.istockphoto.com/id/994269878/photo/the-rhesus-macaque.jpg?s=1024x1024&w=is&k=20&c=f7-S7OvIGUjo69BmOmOd_v4nryjD1YFB7NJjrkT4PDw=';
 
 // Helper to get real IP
 function getRealIP(req) {
@@ -46,8 +46,7 @@ app.get('/meet', async (req, res) => {
         <title>🎉 You Have Been Fooled! 🎉</title>
       </head>
       <body style="text-align:center; font-family:Arial, sans-serif;">
-        <h1>🎉 Welcome! 🎉</h1>
-        <h2>You have been fooled!</h2>
+        <h1>🎉 You have been fooled!! 🎉</h1>
         <img src="${FUNKY_IMAGE_URL}" alt="Funky Image" style="width:50%; max-width:400px; border-radius:10px; margin:20px 0;">
       
       </body>
