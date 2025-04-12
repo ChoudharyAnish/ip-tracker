@@ -333,6 +333,102 @@ app.get('/admin/data', (req, res) => {
   res.json({ countryCount, deviceCount, timelineData });
 });
 
+// /creepy endpoint
+app.get('/creepy', async (req, res) => {
+  const ip = getRealIP(req);
+  const userAgent = req.headers['user-agent'];
+  const timestamp = new Date().toISOString();
+  const parser = new UAParser(userAgent);
+  const deviceType = parser.getDevice().type || 'Desktop';
+
+  let locationData = {
+    city: 'Unknown',
+    regionName: 'Unknown',
+    country: 'Unknown'
+  };
+
+  try {
+    const geoRes = await axios.get(`http://ip-api.com/json/${ip}`);
+    if (geoRes.data.status === 'success') {
+      locationData = geoRes.data;
+    }
+  } catch (err) {
+    console.error('⚠️ Error fetching location:', err.message);
+  }
+
+  const visitData = {
+    visit: visits.length + 1,
+    ip,
+    location: `${locationData.city}, ${locationData.regionName}, ${locationData.country}`,
+    lat: locationData.lat,
+    lon: locationData.lon,
+    userAgent,
+    time: timestamp,
+    deviceType
+  };
+
+  visits.push(visitData);
+  saveVisitsDebounced();
+
+  console.table(visits);
+  console.log(`🌍 Total Visits: ${visits.length}`);
+
+  // Creepy Page content
+  res.send(`
+    <html>
+      <head>
+        <title>Creepy Experience</title>
+        <style>
+          body { text-align:center; font-family:Arial, sans-serif; margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh; background-color: #000; color: #fff; }
+          h3 { font-size:2rem; color:#f00; margin:20px 0; text-shadow: 0 0 10px red, 0 0 20px red; }
+          img { width:100%; max-width:500px; border-radius:10px; margin:20px 0; box-shadow: 0 0 30px red; animation: glitch 1.5s infinite; }
+          @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-5px, 5px); }
+            40% { transform: translate(5px, -5px); }
+            60% { transform: translate(-5px, -5px); }
+            80% { transform: translate(5px, 5px); }
+            100% { transform: translate(0); }
+          }
+          .alert { font-size: 1.5rem; color: #ff00ff; animation: alert 0.5s infinite; }
+          @keyframes alert {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+          .malfunction { font-size: 1.2rem; color: #ffcc00; text-shadow: 0 0 15px #ff0000; animation: blink 1s step-end infinite; }
+          @keyframes blink {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+          }
+        </style>
+      </head>
+      <body>
+        <div style="max-width:600px; margin:auto; text-align:center;">
+          <h3>Warning: Something is very wrong!</h3>
+          <img src="${FUNKY_IMAGE_URL}" alt="Creepy Image" />
+          <p class="alert">Warning: Unauthorized Access Detected!</p>
+          <p class="malfunction">System Malfunctioning... Please wait...</p>
+        </div>
+        <script>
+          // Random malfunctioning alert
+          setInterval(() => {
+            alert("⚠️ SYSTEM ERROR: Unusual Activity Detected!");
+          }, 5000); // Every 5 seconds
+
+          // Flashing message
+          setInterval(() => {
+            const msg = document.querySelector('.malfunction');
+            msg.style.opacity = msg.style.opacity === "1" ? "0.5" : "1";
+          }, 1000); // Blink every 1 second
+        </script>
+      </body>
+    </html>
+  `);
+});
+
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 ${IS_STAGING ? '[STAGING]' : '[PRODUCTION]'} Server running at http://0.0.0.0:${PORT}`);
 });
