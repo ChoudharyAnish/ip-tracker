@@ -11,8 +11,13 @@ const PORT = process.env.PORT || 10000;
 const ADMIN_USER = 'admin';
 const ADMIN_PASS = 'password';
 
-const FUNKY_IMAGE_URL = 'https://media.istockphoto.com/id/994269878/photo/the-rhesus-macaque.jpg?s=1024x1024&w=is&k=20&c=f7-S7OvIGUjo69BmOmOd_v4nryjD1YFB7NJjrkT4PDw=';
-const VISIT_LOG_FILE = path.join(__dirname, 'visits.json');
+// Use separate file when staging
+const IS_STAGING = process.env.STAGING === 'true';
+const VISIT_LOG_FILE = path.join(__dirname, IS_STAGING ? 'visits-staging.json' : 'visits.json');
+
+const FUNKY_IMAGE_URL = IS_STAGING 
+  ? 'https://i.postimg.cc/yxM0JkpT/received-443561689372990.jpg' // Staging image
+  : 'https://media.istockphoto.com/id/994269878/photo/the-rhesus-macaque.jpg?s=1024x1024&w=is&k=20&c=f7-S7OvIGUjo69BmOmOd_v4nryjD1YFB7NJjrkT4PDw=';
 
 let visits = [];
 
@@ -35,16 +40,23 @@ function saveVisitsDebounced() {
   clearTimeout(saveVisitsDebounced._t);
   saveVisitsDebounced._t = setTimeout(() => {
     fs.writeFileSync(VISIT_LOG_FILE, JSON.stringify(visits, null, 2));
-  }, 1000);
+  }, 1000); 
 }
 
-// /meet endpoint
-app.get('/meet', async (req, res) => {
+// /creepy endpoint
+app.get('/creepy', async (req, res) => {
   const ip = getRealIP(req);
   const userAgent = req.headers['user-agent'];
   const timestamp = new Date().toISOString();
   const parser = new UAParser(userAgent);
-  const deviceType = parser.getDevice().type || 'Desktop';
+  
+  const deviceInfo = parser.getDevice();
+  const osInfo = parser.getOS();
+  const browserInfo = parser.getBrowser();
+
+  const deviceType = deviceInfo.model || 'Unknown Device';
+  const os = osInfo.name || 'Unknown OS';
+  const browser = browserInfo.name || 'Unknown Browser';
 
   let locationData = {
     city: 'Unknown',
@@ -69,7 +81,9 @@ app.get('/meet', async (req, res) => {
     lon: locationData.lon,
     userAgent,
     time: timestamp,
-    deviceType
+    deviceType,
+    os,
+    browser
   };
 
   visits.push(visitData);
@@ -78,14 +92,56 @@ app.get('/meet', async (req, res) => {
   console.table(visits);
   console.log(`🌍 Total Visits: ${visits.length}`);
 
+  // Creepy Page content
   res.send(`
     <html>
-      <head><title>🎉 Gotcha!</title></head>
-      <body style="text-align:center; font-family:Arial, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f4;">
-        <div style="text-align:center;">
-          <h1 style="font-size:2.5rem; color:#2D3748;">🎉 You have been fooled!! 🎉</h1>
-          <img src="${FUNKY_IMAGE_URL}" style="width:100%; max-width:500px; border-radius:10px; margin:20px 0;">
+      <head>
+        <title>Creepy Experience</title>
+        <style>
+          body { text-align:center; font-family:Arial, sans-serif; margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh; background-color: #000; color: #fff; }
+          h3 { font-size:2rem; color:#f00; margin:20px 0; text-shadow: 0 0 10px red, 0 0 20px red; }
+          img { width:100%; max-width:500px; border-radius:10px; margin:20px 0; box-shadow: 0 0 30px red; animation: glitch 1.5s infinite; }
+          @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-5px, 5px); }
+            40% { transform: translate(5px, -5px); }
+            60% { transform: translate(-5px, -5px); }
+            80% { transform: translate(5px, 5px); }
+            100% { transform: translate(0); }
+          }
+          .alert { font-size: 1.5rem; color: #ff00ff; animation: alert 0.5s infinite; }
+          @keyframes alert {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+          .malfunction { font-size: 1.2rem; color: #ffcc00; text-shadow: 0 0 15px #ff0000; animation: blink 1s step-end infinite; }
+          @keyframes blink {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+          }
+        </style>
+      </head>
+      <body>
+        <div style="max-width:600px; margin:auto; text-align:center;">
+          <h3>Warning: Something is very wrong!</h3>
+          <img src="${FUNKY_IMAGE_URL}" alt="Creepy Image" />
+          <p class="alert">Warning: Unauthorized Access Detected!</p>
+          <p class="malfunction">System Malfunctioning... Please wait...</p>
         </div>
+        <script>
+          // Random malfunctioning alert
+          setInterval(() => {
+            alert("⚠️ SYSTEM ERROR: Unusual Activity Detected!");
+          }, 5000); // Every 5 seconds
+
+          // Flashing message
+          setInterval(() => {
+            const msg = document.querySelector('.malfunction');
+            msg.style.opacity = msg.style.opacity === "1" ? "0.5" : "1";
+          }, 1000); // Blink every 1 second
+        </script>
       </body>
     </html>
   `);
@@ -108,7 +164,7 @@ app.use('/admin', (req, res, next) => {
   }
 });
 
-// Admin Dashboard
+// Admin Dashboard with Minimal Black and White UI
 app.get('/admin', (req, res) => {
   const uniqueIPs = new Set(visits.map(v => v.ip)).size;
   const countryCount = {};
@@ -127,123 +183,118 @@ app.get('/admin', (req, res) => {
   const topCountry = Object.entries(countryCount).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
   const topDevice = Object.entries(deviceCount).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
 
-  const tableRows = visits.map(v => `
-    <tr class="border-t text-sm">
-      <td class="p-2">${v.visit}</td>
-      <td class="p-2">${v.ip}</td>
-      <td class="p-2">${v.location}</td>
-      <td class="p-2">${v.deviceType || 'Unknown'}</td>
-      <td class="p-2">${new Date(v.time).toLocaleString()}</td>
+  const tableRows = visits.map(v => ` 
+    <tr style="border-top: 1px solid #000; font-size: 0.9rem;">
+      <td style="padding: 6px;">${v.visit}</td>
+      <td style="padding: 6px;">${v.ip}</td>
+      <td style="padding: 6px;">${v.location}</td>
+      <td style="padding: 6px;">${v.deviceType || 'Unknown'}</td>
+      <td style="padding: 6px;">${new Date(v.time).toLocaleString()}</td>
     </tr>
   `).join('');
 
   res.send(`
     <html>
-    <head>
-      <title>Visitor Dashboard</title>
-      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-      <script src="https://cdn.tailwindcss.com"></script>
-    </head>
-    <body class="bg-gray-100 text-gray-800 p-4">
-      <h1 class="text-2xl font-bold mb-4">🌍 Visitor Analytics Dashboard</h1>
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 text-center">
-        <div class="bg-white p-4 rounded shadow"><div class="text-xl font-semibold">${visits.length}</div><div>Total Visits</div></div>
-        <div class="bg-white p-4 rounded shadow"><div class="text-xl font-semibold">${uniqueIPs}</div><div>Unique Visitors</div></div>
-        <div class="bg-white p-4 rounded shadow"><div class="text-xl font-semibold">${topCountry}</div><div>Top Country</div></div>
-        <div class="bg-white p-4 rounded shadow"><div class="text-xl font-semibold">${topDevice}</div><div>Top Device</div></div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-        <div class="bg-white p-4 rounded shadow">
-          <canvas id="countryChart"></canvas>
+      <head>
+        <title>Visitor Dashboard</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+          /* Minimal Black and White CSS */
+          body { font-family: Arial, sans-serif; background-color: #fff; color: #000; margin: 0; padding: 20px; }
+          h1, h2 { margin: 0 0 20px 0; }
+          .grid { display: grid; gap: 20px; }
+          .grid-4 { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+          .grid-2 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+          .card { padding: 15px; border: 1px solid #000; border-radius: 4px; background-color: #fff; }
+          table { width: 100%; border-collapse: collapse; }
+          th { background-color: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #000; }
+          td { padding: 8px; border: 1px solid #000; }
+          canvas { width: 100% !important; height: 300px !important; }
+        </style>
+      </head>
+      <body>
+        <h1>Visitor Analytics Dashboard</h1>
+        <!-- Real-Time Visitor Counter (Fake) -->
+        <div class="card" style="text-align: center;">
+          <div style="font-size: 1.5rem; font-weight: bold;" id="visitorCount">0</div>
+          <div>Real-Time Visitors</div>
         </div>
-        <div class="bg-white p-4 rounded shadow">
-          <canvas id="deviceChart"></canvas>
+
+        <!-- Charts -->
+        <div class="grid grid-2">
+          <div class="card">
+            <h2>Visitor Countries</h2>
+            <canvas id="countryChart"></canvas>
+          </div>
+          <div class="card">
+            <h2>Device Types</h2>
+            <canvas id="deviceChart"></canvas>
+          </div>
         </div>
-        <div class="bg-white p-4 rounded shadow sm:col-span-2">
-          <canvas id="timelineChart"></canvas>
+
+        <!-- Visit Log Table -->
+        <div class="card">
+          <h2>Visitor Log</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Visit #</th>
+                <th>IP Address</th>
+                <th>Location</th>
+                <th>Device</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRows}
+            </tbody>
+          </table>
         </div>
-      </div>
 
-      <div class="bg-white p-4 rounded shadow overflow-x-auto">
-        <h2 class="text-lg font-bold mb-2">All Visits</h2>
-        <table class="min-w-full text-left border">
-          <thead><tr class="bg-gray-200 text-sm"><th class="p-2">#</th><th class="p-2">IP</th><th class="p-2">Location</th><th class="p-2">Device</th><th class="p-2">Time</th></tr></thead>
-          <tbody>${tableRows}</tbody>
-        </table>
-      </div>
+        <script>
+          // Real-time Visitor Counter
+          let counter = 0;
+          setInterval(() => {
+            counter++;
+            document.getElementById('visitorCount').innerText = counter;
+          }, 1000);
 
-      <script>
-        const chartConfig = {
-          type: 'bar',
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: { beginAtZero: true },
-              y: { beginAtZero: true }
-            }
-          }
-        };
-
-        function updateCharts(data) {
-          const countryData = data.countryCount;
-          const deviceData = data.deviceCount;
-          const timelineData = data.timelineData;
-
-          const labels1 = Object.keys(countryData);
-          const data1 = Object.values(countryData);
-          new Chart(document.getElementById('countryChart'), {
-            ...chartConfig,
-            data: { labels: labels1, datasets: [{ label: 'Visits by Country', data: data1, backgroundColor: '#60A5FA' }] }
-          });
-
-          const labels2 = Object.keys(deviceData);
-          const data2 = Object.values(deviceData);
-          new Chart(document.getElementById('deviceChart'), {
-            ...chartConfig,
+          // Chart.js for Visitor Analytics
+          const countryData = ${JSON.stringify(countryCount)}; 
+          const deviceData = ${JSON.stringify(deviceCount)};
+          
+          const ctxCountry = document.getElementById('countryChart').getContext('2d');
+          const ctxDevice = document.getElementById('deviceChart').getContext('2d');
+          
+          new Chart(ctxCountry, {
             type: 'pie',
-            data: { labels: labels2, datasets: [{ label: 'Devices', data: data2 }] }
+            data: {
+              labels: Object.keys(countryData),
+              datasets: [{
+                label: 'Country Visits',
+                data: Object.values(countryData),
+                backgroundColor: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'],
+              }]
+            }
           });
 
-          const labels3 = Object.keys(timelineData);
-          const data3 = Object.values(timelineData);
-          new Chart(document.getElementById('timelineChart'), {
-            ...chartConfig,
-            type: 'line',
-            data: { labels: labels3, datasets: [{ label: 'Visits Over Time', data: data3, borderColor: '#34D399', fill: false }] }
+          new Chart(ctxDevice, {
+            type: 'bar',
+            data: {
+              labels: Object.keys(deviceData),
+              datasets: [{
+                label: 'Device Visits',
+                data: Object.values(deviceData),
+                backgroundColor: '#333',
+              }]
+            }
           });
-        }
-
-        setInterval(async () => {
-          const response = await fetch('/admin/data');
-          const data = await response.json();
-          updateCharts(data);
-        }, 10000);
-      </script>
-    </body>
+        </script>
+      </body>
     </html>
   `);
 });
 
-// Data endpoint for charts
-app.get('/admin/data', (req, res) => {
-  const countryCount = {};
-  const deviceCount = {};
-  const timelineData = {};
-
-  visits.forEach(v => {
-    const country = v.location.split(', ').pop();
-    countryCount[country] = (countryCount[country] || 0) + 1;
-    const device = v.deviceType || 'Unknown';
-    deviceCount[device] = (deviceCount[device] || 0) + 1;
-    const date = new Date(v.time).toISOString().split('T')[0];
-    timelineData[date] = (timelineData[date] || 0) + 1;
-  });
-
-  res.json({ countryCount, deviceCount, timelineData });
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
