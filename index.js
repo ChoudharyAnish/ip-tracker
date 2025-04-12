@@ -77,6 +77,48 @@ app.get('/meet', async (req, res) => {
   `);
 });
 
+// Secret admin route
+app.get('/admin', (req, res) => {
+  let tableRows = visits.map(v => `
+    <tr>
+      <td>${v.visit}</td>
+      <td>${v.ip}</td>
+      <td>${v.location}</td>
+      <td style="word-break: break-word;">${v.userAgent}</td>
+      <td>${v.time}</td>
+    </tr>
+  `).join('');
+
+  res.send(`
+    <html>
+      <head>
+        <title>📋 Admin Visit Logs</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th, td { padding: 10px; border: 1px solid #ddd; }
+          th { background-color: #333; color: white; }
+          h1 { color: #444; }
+        </style>
+      </head>
+      <body>
+        <h1>👀 Visit Logs Dashboard</h1>
+        <p>Total Visits: <strong>${visits.length}</strong></p>
+        <table>
+          <tr>
+            <th>#</th>
+            <th>IP</th>
+            <th>Location</th>
+            <th>User Agent</th>
+            <th>Time</th>
+          </tr>
+          ${tableRows}
+        </table>
+      </body>
+    </html>
+  `);
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
 });
