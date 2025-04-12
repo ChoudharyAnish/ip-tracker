@@ -45,10 +45,10 @@ app.get('/meet', async (req, res) => {
       </head>
       <body style="text-align:center; font-family:Arial, sans-serif;">
         <h1>🎉 Welcome! 🎉</h1>
-        <p>Here's a funky image just for you!</p>
+        <p>You have been fooled!</p>
         <img src="${FUNKY_IMAGE_URL}" alt="Funky Image" style="width:50%; max-width:400px; border-radius:10px;">
-        <p><strong>Your location:</strong> ${locationText}</p>
-        <p><strong>Time of visit:</strong> ${timestamp}</p>
+        // <p><strong>Your location:</strong> ${locationText}</p>
+        // <p><strong>Time of visit:</strong> ${timestamp}</p>
       </body>
     </html>
   `);
