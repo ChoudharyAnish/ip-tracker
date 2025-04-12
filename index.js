@@ -74,7 +74,7 @@ app.get('/meet', async (req, res) => {
     console.error('⚠️ Geo API error:', err.message);
   }
 
-  res.send(
+  res.send(`
     <html>
       <head>
         <title>🎉 You Have Been Fooled! 🎉</title>
@@ -89,7 +89,7 @@ app.get('/meet', async (req, res) => {
         <p><strong>User Agent:</strong> ${userAgent}</p>
       </body>
     </html>
-  );
+  `);
 });
 
 //Use '0.0.0.0' to make the app accessible externally, not just on localhost
