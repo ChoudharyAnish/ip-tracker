@@ -147,12 +147,12 @@ app.get('/admin', (req, res) => {
   res.send(`
     <html>
     <head>
-      <title>Visitor Dashboard</title>
+      <title>Anish Dashboard</title>
       <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
       <script src="https://cdn.tailwindcss.com"></script>
     </head>
     <body class="bg-gray-100 text-gray-800 p-4">
-      <h1 class="text-2xl font-bold mb-4">🌍 Visitor Analytics Dashboard</h1>
+      <h1 class="text-2xl font-bold mb-4">🌍 Anish Analytics Dashboard</h1>
 
       <!-- Summary Cards -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 text-center">
