@@ -69,7 +69,7 @@ app.get('/meet', async (req, res) => {
     lon: locationData.lon,
     userAgent,
     time: timestamp,
-    deviceType // <- already added in previous steps
+    deviceType
   };
 
   visits.push(visitData);
@@ -108,27 +108,20 @@ app.use('/admin', (req, res, next) => {
   }
 });
 
-// Admin UI
+// Admin Dashboard
 app.get('/admin', (req, res) => {
-  // Group stats
   const uniqueIPs = new Set(visits.map(v => v.ip)).size;
-
   const countryCount = {};
   const deviceCount = {};
-  const dateCount = {};
+  const timelineData = {};
 
   visits.forEach(v => {
-    // Count countries
     const country = v.location.split(', ').pop();
     countryCount[country] = (countryCount[country] || 0) + 1;
-
-    // Count devices
     const device = v.deviceType || 'Unknown';
     deviceCount[device] = (deviceCount[device] || 0) + 1;
-
-    // Count visits by date
     const date = new Date(v.time).toISOString().split('T')[0];
-    dateCount[date] = (dateCount[date] || 0) + 1;
+    timelineData[date] = (timelineData[date] || 0) + 1;
   });
 
   const topCountry = Object.entries(countryCount).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
@@ -147,14 +140,12 @@ app.get('/admin', (req, res) => {
   res.send(`
     <html>
     <head>
-      <title>Anish Dashboard</title>
+      <title>Visitor Dashboard</title>
       <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
       <script src="https://cdn.tailwindcss.com"></script>
     </head>
     <body class="bg-gray-100 text-gray-800 p-4">
-      <h1 class="text-2xl font-bold mb-4">🌍 Anish Analytics Dashboard</h1>
-
-      <!-- Summary Cards -->
+      <h1 class="text-2xl font-bold mb-4">🌍 Visitor Analytics Dashboard</h1>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 text-center">
         <div class="bg-white p-4 rounded shadow"><div class="text-xl font-semibold">${visits.length}</div><div>Total Visits</div></div>
         <div class="bg-white p-4 rounded shadow"><div class="text-xl font-semibold">${uniqueIPs}</div><div>Unique Visitors</div></div>
@@ -162,7 +153,6 @@ app.get('/admin', (req, res) => {
         <div class="bg-white p-4 rounded shadow"><div class="text-xl font-semibold">${topDevice}</div><div>Top Device</div></div>
       </div>
 
-      <!-- Charts -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
         <div class="bg-white p-4 rounded shadow">
           <canvas id="countryChart"></canvas>
@@ -175,7 +165,6 @@ app.get('/admin', (req, res) => {
         </div>
       </div>
 
-      <!-- Table -->
       <div class="bg-white p-4 rounded shadow overflow-x-auto">
         <h2 class="text-lg font-bold mb-2">All Visits</h2>
         <table class="min-w-full text-left border">
@@ -185,22 +174,8 @@ app.get('/admin', (req, res) => {
       </div>
 
       <script>
-        const countryData = ${JSON.stringify(countryCount)};
-        const deviceData = ${JSON.stringify(deviceCount)};
-        const timelineData = ${JSON.stringify(dateCount)};
-
-        const labels1 = Object.keys(countryData);
-        const data1 = Object.values(countryData);
-        new Chart(document.getElementById('countryChart'), {
+        const chartConfig = {
           type: 'bar',
-          data: {
-            labels: labels1,
-            datasets: [{
-              label: 'Visits by Country',
-              data: data1,
-              backgroundColor: '#60A5FA'
-            }]
-          },
           options: {
             responsive: true,
             maintainAspectRatio: false,
@@ -209,51 +184,64 @@ app.get('/admin', (req, res) => {
               y: { beginAtZero: true }
             }
           }
-        });
+        };
 
-        const labels2 = Object.keys(deviceData);
-        const data2 = Object.values(deviceData);
-        new Chart(document.getElementById('deviceChart'), {
-          type: 'pie',
-          data: {
-            labels: labels2,
-            datasets: [{
-              label: 'Devices',
-              data: data2
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false
-          }
-        });
+        function updateCharts(data) {
+          const countryData = data.countryCount;
+          const deviceData = data.deviceCount;
+          const timelineData = data.timelineData;
 
-        const labels3 = Object.keys(timelineData);
-        const data3 = Object.values(timelineData);
-        new Chart(document.getElementById('timelineChart'), {
-          type: 'line',
-          data: {
-            labels: labels3,
-            datasets: [{
-              label: 'Visits Over Time',
-              data: data3,
-              borderColor: '#34D399',
-              fill: false
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: { beginAtZero: true },
-              y: { beginAtZero: true }
-            }
-          }
-        });
+          const labels1 = Object.keys(countryData);
+          const data1 = Object.values(countryData);
+          new Chart(document.getElementById('countryChart'), {
+            ...chartConfig,
+            data: { labels: labels1, datasets: [{ label: 'Visits by Country', data: data1, backgroundColor: '#60A5FA' }] }
+          });
+
+          const labels2 = Object.keys(deviceData);
+          const data2 = Object.values(deviceData);
+          new Chart(document.getElementById('deviceChart'), {
+            ...chartConfig,
+            type: 'pie',
+            data: { labels: labels2, datasets: [{ label: 'Devices', data: data2 }] }
+          });
+
+          const labels3 = Object.keys(timelineData);
+          const data3 = Object.values(timelineData);
+          new Chart(document.getElementById('timelineChart'), {
+            ...chartConfig,
+            type: 'line',
+            data: { labels: labels3, datasets: [{ label: 'Visits Over Time', data: data3, borderColor: '#34D399', fill: false }] }
+          });
+        }
+
+        setInterval(async () => {
+          const response = await fetch('/admin/data');
+          const data = await response.json();
+          updateCharts(data);
+        }, 10000);
       </script>
     </body>
     </html>
   `);
+});
+
+// Data endpoint for charts
+app.get('/admin/data', (req, res) => {
+  const countryCount = {};
+  const deviceCount = {};
+  const timelineData = {};
+
+  visits.forEach(v => {
+    const country = v.location.split(', ').pop();
+    countryCount[country] = (countryCount[country] || 0) + 1;
+    const device = v.deviceType || 'Unknown';
+    deviceCount[device] = (deviceCount[device] || 0) + 1;
+    const date = new Date(v.time).toISOString().split('T')[0];
+    timelineData[date] = (timelineData[date] || 0) + 1;
+  });
+
+  res.json({ countryCount, deviceCount, timelineData });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
