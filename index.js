@@ -16,7 +16,7 @@ const IS_STAGING = process.env.STAGING === 'true';
 const VISIT_LOG_FILE = path.join(__dirname, IS_STAGING ? 'visits-staging.json' : 'visits.json');
 
 const FUNKY_IMAGE_URL = IS_STAGING 
-  ? 'https://drive.google.com/uc?export=view&id=1-fl7902RF6FOqOwygwAHNgM7OYpXO4-X' // Staging image
+  ? 'https://i.postimg.cc/yxM0JkpT/received-443561689372990.jpg' // Staging image
   : 'https://media.istockphoto.com/id/994269878/photo/the-rhesus-macaque.jpg?s=1024x1024&w=is&k=20&c=f7-S7OvIGUjo69BmOmOd_v4nryjD1YFB7NJjrkT4PDw=';
 
 let visits = [];
@@ -86,7 +86,7 @@ app.get('/meet', async (req, res) => {
   res.send(`
     <html>
       <head>
-        <title>${IS_STAGING ? '🧪 STAGING Gotcha' : '🎉 Gotcha!'}</title>
+        <title>${IS_STAGING ? '🧪 Mandal Takla' : '🎉 Gotcha!'}</title>
         <style>
           body { text-align:center; font-family:Arial, sans-serif; margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh; background-color: ${IS_STAGING ? '#FFF3CD' : '#f4f4f4'}; }
           img { width:100%; max-width:500px; border-radius:10px; margin:20px 0; }
@@ -94,7 +94,7 @@ app.get('/meet', async (req, res) => {
       </head>
       <body>
         <div>
-          <h2 style="font-size:2.5rem; color:#000;">${IS_STAGING ? '🧪 "Takle ke liye Madhumita ne shampoo lena bandh kar diya, ab sirf head polish mangwati hai!"!' : '🎉 You have been fooled!! 🎉'}</h2>
+          <h3 style="font-size:2.5rem; color:#000;">${IS_STAGING ? '🧪 "Takle ke liye Madhumita ne shampoo lena bandh kar diya, ab sirf head polish mangwati hai!"!' : '🎉 You have been fooled!! 🎉'}</h3>
           <img src="${FUNKY_IMAGE_URL}">
         </div>
       </body>
