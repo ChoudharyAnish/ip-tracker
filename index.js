@@ -93,10 +93,12 @@ app.get('/meet', async (req, res) => {
         </style>
       </head>
       <body>
-        <div>
-          <h3 style="font-size:2.5rem; color:#000;">${IS_STAGING ? '🧪 "Takle ke liye Madhumita ne shampoo lena bandh kar diya, ab sirf head polish mangwati hai!"!' : '🎉 You have been fooled!! 🎉'}</h3>
-          <img src="${FUNKY_IMAGE_URL}">
-        </div>
+        <div style="max-width:600px; margin:auto; text-align:center;">
+  <h3 style="font-size:1.8rem; color:#111; margin-bottom:20px;">
+    ${IS_STAGING ? '🧪 "Takle ke liye Madhumita ne shampoo lena bandh kar diya, ab sirf head polish mangwati hai!"' : '🎉 You have been fooled!! 🎉'}
+  </h3>
+  <img src="${FUNKY_IMAGE_URL}" alt="Funny Image" style="width:100%; max-width:500px; border-radius:10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+</div>
       </body>
     </html>
   `);
