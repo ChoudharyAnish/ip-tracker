@@ -74,6 +74,34 @@ app.get('/meet', async (req, res) => {
     console.error('⚠️ Geo API error:', err.message);
   }
 
+ app.get('/meet', async (req, res) => {
+  const ip = getRealIP(req);
+  const userAgent = req.headers['user-agent'];
+  const timestamp = new Date().toISOString();
+
+  let locationData = {
+    city: 'Unknown',
+    regionName: 'Unknown',
+    country: 'Unknown'
+  };
+
+  try {
+    const geoRes = await axios.get(`http://ip-api.com/json/${ip}`);
+    if (geoRes.data.status === 'success') {
+      locationData = geoRes.data;
+    } else {
+      console.error('⚠️ Error fetching location:', geoRes.data.message);
+    }
+
+    console.log(`📍 New Visit`);
+    console.log(`IP: ${ip}`);
+    console.log(`Location: ${locationData.city}, ${locationData.regionName}, ${locationData.country}`);
+    console.log(`User Agent: ${userAgent}`);
+    console.log(`Time: ${timestamp}`);
+  } catch (err) {
+    console.error('⚠️ Error fetching location:', err.message);
+  }
+
   res.send(`
     <html>
       <head>
@@ -83,7 +111,7 @@ app.get('/meet', async (req, res) => {
         <h1>🎉 Welcome! 🎉</h1>
         <h2>You have been fooled!</h2>
         <img src="${FUNKY_IMAGE_URL}" alt="Funky Image" style="width:50%; max-width:400px; border-radius:10px; margin:20px 0;">
-        <p><strong>Your location:</strong> ${location.city}, ${location.regionName}, ${location.country}</p>
+        <p><strong>Your location:</strong> ${locationData.city}, ${locationData.regionName}, ${locationData.country}</p>
         <p><strong>IP Address:</strong> ${ip}</p>
         <p><strong>Time of visit:</strong> ${timestamp}</p>
         <p><strong>User Agent:</strong> ${userAgent}</p>
@@ -92,7 +120,7 @@ app.get('/meet', async (req, res) => {
   `);
 });
 
-//Use '0.0.0.0' to make the app accessible externally, not just on localhost
+// Use '0.0.0.0' to make the app accessible externally, not just on localhost
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
 });
