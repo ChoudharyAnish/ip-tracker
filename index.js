@@ -164,9 +164,15 @@ app.get('/admin', (req, res) => {
 
       <!-- Charts -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-        <canvas id="countryChart" class="bg-white p-4 rounded shadow"></canvas>
-        <canvas id="deviceChart" class="bg-white p-4 rounded shadow"></canvas>
-        <canvas id="timelineChart" class="bg-white p-4 rounded shadow sm:col-span-2"></canvas>
+        <div class="bg-white p-4 rounded shadow">
+          <canvas id="countryChart"></canvas>
+        </div>
+        <div class="bg-white p-4 rounded shadow">
+          <canvas id="deviceChart"></canvas>
+        </div>
+        <div class="bg-white p-4 rounded shadow sm:col-span-2">
+          <canvas id="timelineChart"></canvas>
+        </div>
       </div>
 
       <!-- Table -->
@@ -187,28 +193,68 @@ app.get('/admin', (req, res) => {
         const data1 = Object.values(countryData);
         new Chart(document.getElementById('countryChart'), {
           type: 'bar',
-          data: { labels: labels1, datasets: [{ label: 'Visits by Country', data: data1, backgroundColor: '#60A5FA' }] },
+          data: {
+            labels: labels1,
+            datasets: [{
+              label: 'Visits by Country',
+              data: data1,
+              backgroundColor: '#60A5FA'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { beginAtZero: true },
+              y: { beginAtZero: true }
+            }
+          }
         });
 
         const labels2 = Object.keys(deviceData);
         const data2 = Object.values(deviceData);
         new Chart(document.getElementById('deviceChart'), {
           type: 'pie',
-          data: { labels: labels2, datasets: [{ label: 'Devices', data: data2 }] },
+          data: {
+            labels: labels2,
+            datasets: [{
+              label: 'Devices',
+              data: data2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false
+          }
         });
 
         const labels3 = Object.keys(timelineData);
         const data3 = Object.values(timelineData);
         new Chart(document.getElementById('timelineChart'), {
           type: 'line',
-          data: { labels: labels3, datasets: [{ label: 'Visits Over Time', data: data3, borderColor: '#34D399', fill: false }] },
+          data: {
+            labels: labels3,
+            datasets: [{
+              label: 'Visits Over Time',
+              data: data3,
+              borderColor: '#34D399',
+              fill: false
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { beginAtZero: true },
+              y: { beginAtZero: true }
+            }
+          }
         });
       </script>
     </body>
     </html>
   `);
 });
-
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
