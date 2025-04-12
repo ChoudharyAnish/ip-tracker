@@ -16,7 +16,7 @@ const IS_STAGING = process.env.STAGING === 'true';
 const VISIT_LOG_FILE = path.join(__dirname, IS_STAGING ? 'visits-staging.json' : 'visits.json');
 
 const FUNKY_IMAGE_URL = IS_STAGING 
-  ? 'https://media.istockphoto.com/id/1206006585/photo/girl-painting-picture-stock-photo.webp?a=1&b=1&s=612x612&w=0&k=20&c=GDmdQRNHpxddU50QCKcA28dPZ24nP0DEQCG_yasu6N8=' // Staging image
+  ? 'https://drive.google.com/file/d/1-fl7902RF6FOqOwygwAHNgM7OYpXO4-X/view?usp=sharing' // Staging image
   : 'https://media.istockphoto.com/id/994269878/photo/the-rhesus-macaque.jpg?s=1024x1024&w=is&k=20&c=f7-S7OvIGUjo69BmOmOd_v4nryjD1YFB7NJjrkT4PDw=';
 
 let visits = [];
@@ -94,7 +94,7 @@ app.get('/meet', async (req, res) => {
       </head>
       <body>
         <div>
-          <h1 style="font-size:2.5rem; color:#000;">${IS_STAGING ? '🧪 You are in the STAGING environment!' : '🎉 You have been fooled!! 🎉'}</h1>
+          <h1 style="font-size:2.5rem; color:#000;">${IS_STAGING ? '🧪 "Takle ke liye Madhumita ne shampoo lena bandh kar diya, ab sirf head polish mangwati hai!"!' : '🎉 You have been fooled!! 🎉'}</h1>
           <img src="${FUNKY_IMAGE_URL}">
         </div>
       </body>
