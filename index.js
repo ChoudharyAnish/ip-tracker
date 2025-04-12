@@ -12,7 +12,8 @@ const ADMIN_USER = 'admin';
 const ADMIN_PASS = 'password';
 
 const FUNKY_IMAGE_URL = 'https://media.istockphoto.com/id/994269878/photo/the-rhesus-macaque.jpg?s=1024x1024&w=is&k=20&c=f7-S7OvIGUjo69BmOmOd_v4nryjD1YFB7NJjrkT4PDw=';
-const VISIT_LOG_FILE = path.join(__dirname, 'visits.json');
+const IS_STAGING = process.env.STAGING === 'true';
+const VISIT_LOG_FILE = path.join(__dirname, IS_STAGING ? 'visits-staging.json' : 'visits.json');
 
 let visits = [];
 
