@@ -28,6 +28,7 @@ app.get('/meet', async (req, res) => {
   res.redirect(REDIRECT_URL);
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Tracker running at http://localhost:${PORT}`);
+// Use '0.0.0.0' to make the app accessible externally, not just on localhost
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Tracker running at http://0.0.0.0:${PORT}`);
 });
