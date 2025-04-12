@@ -38,21 +38,52 @@ app.get('/meet', async (req, res) => {
   }
 
   // Serve a funky image with a message and location info
-  res.send(`
-    <html>
-      <head>
-        <title>Welcome!</title>
-      </head>
-      <body style="text-align:center; font-family:Arial, sans-serif;">
-        <h1>🎉 Welcome! 🎉</h1>
-        <p>You have been fooled!</p>
-        <img src="${FUNKY_IMAGE_URL}" alt="Funky Image" style="width:50%; max-width:400px; border-radius:10px;">
-        // <p><strong>Your location:</strong> ${locationText}</p>
-        // <p><strong>Time of visit:</strong> ${timestamp}</p>
-      </body>
-    </html>
-  `);
-});
+ res.send(`
+  <html>
+    <head>
+      <title>Welcome, Curious One!</title>
+      <style>
+        body {
+          background: linear-gradient(to right, #ffecd2, #fcb69f);
+          font-family: 'Comic Sans MS', 'Arial', sans-serif;
+          text-align: center;
+          padding: 50px;
+          color: #333;
+        }
+        h1 {
+          font-size: 2.5rem;
+          margin-bottom: 10px;
+        }
+        .subtitle {
+          font-size: 1.5rem;
+          color: #555;
+          margin-bottom: 30px;
+        }
+        img {
+          width: 60%;
+          max-width: 500px;
+          border-radius: 20px;
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+          transition: transform 0.3s ease-in-out;
+        }
+        img:hover {
+          transform: scale(1.05) rotate(-1deg);
+        }
+        .footer {
+          margin-top: 30px;
+          font-size: 1rem;
+          color: #666;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>🎉 Welcome! 🎉</h1>
+      <div class="subtitle">You’ve officially been fooled! 😜</div>
+      <img src="${FUNKY_IMAGE_URL}" alt="Funky Image">
+      <div class="footer">Enjoy your day — and maybe prank someone else 😉</div>
+    </body>
+  </html>
+`);
 
 // Use '0.0.0.0' to make the app accessible externally, not just on localhost
 app.listen(PORT, '0.0.0.0', () => {
