@@ -61,14 +61,17 @@ app.get('/meet', async (req, res) => {
     console.error('⚠️ Error fetching location:', err.message);
   }
 
-  const visitData = {
-    visit: visits.length + 1,
-    ip,
-    location: `${locationData.city}, ${locationData.regionName}, ${locationData.country}`,
-    userAgent,
-    deviceType,
-    time: timestamp
-  };
+const visitData = {
+  visit: visits.length + 1,
+  ip,
+  location: `${locationData.city}, ${locationData.regionName}, ${locationData.country}`,
+  lat: locationData.lat,
+  lon: locationData.lon,
+  userAgent,
+  time: timestamp,
+  deviceType // <- already added in previous steps
+};
+
 
   visits.push(visitData);
   saveVisitsDebounced();
@@ -106,45 +109,129 @@ app.use('/admin', (req, res, next) => {
 
 // Admin UI
 app.get('/admin', (req, res) => {
-  let tableRows = visits.map(v => `
-    <tr>
-      <td>${v.visit}</td>
-      <td>${v.ip}</td>
-      <td>${v.location}</td>
-      <td>${v.deviceType}</td>
-      <td style="font-size:12px;">${v.userAgent}</td>
-      <td>${v.time}</td>
+  // Group stats
+  const uniqueIPs = new Set(visits.map(v => v.ip)).size;
+
+  const countryCount = {};
+  const deviceCount = {};
+  const dateCount = {};
+
+  visits.forEach(v => {
+    // Count countries
+    const country = v.location.split(', ').pop();
+    countryCount[country] = (countryCount[country] || 0) + 1;
+
+    // Count devices
+    const device = v.deviceType || 'Unknown';
+    deviceCount[device] = (deviceCount[device] || 0) + 1;
+
+    // Count visits by date
+    const date = new Date(v.time).toISOString().split('T')[0];
+    dateCount[date] = (dateCount[date] || 0) + 1;
+  });
+
+  const topCountry = Object.entries(countryCount).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
+  const topDevice = Object.entries(deviceCount).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
+
+  const tableRows = visits.map(v => `
+    <tr class="border-t text-sm">
+      <td class="p-2">${v.visit}</td>
+      <td class="p-2">${v.ip}</td>
+      <td class="p-2">${v.location}</td>
+      <td class="p-2">${v.deviceType || 'Unknown'}</td>
+      <td class="p-2">${new Date(v.time).toLocaleString()}</td>
     </tr>
   `).join('');
 
   res.send(`
     <html>
-      <head>
-        <title>Visitor Dashboard</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>
-          body { font-family: sans-serif; padding: 20px; background: #f7f7f7; }
-          h2 { margin-bottom: 15px; }
-          table { width: 100%; border-collapse: collapse; font-size: 14px; overflow-x: auto; display: block; }
-          th, td { padding: 8px 10px; border: 1px solid #ccc; text-align: left; word-break: break-all; }
-          th { background: #444; color: #fff; }
-          tr:nth-child(even) { background: #eee; }
-        </style>
-      </head>
-      <body>
-        <h2>📊 Total Visits: ${visits.length}</h2>
-        <div style="overflow-x:auto;">
-          <table>
-            <thead>
-              <tr><th>#</th><th>IP</th><th>Location</th><th>Device</th><th>User Agent</th><th>Time</th></tr>
-            </thead>
-            <tbody>${tableRows}</tbody>
-          </table>
-        </div>
-      </body>
+    <head>
+      <title>Visitor Dashboard</title>
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+      <link href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" rel="stylesheet"/>
+      <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-100 text-gray-800 p-4">
+      <h1 class="text-2xl font-bold mb-4">🌍 Visitor Analytics Dashboard</h1>
+
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 text-center">
+        <div class="bg-white p-4 rounded shadow"><div class="text-xl font-semibold">${visits.length}</div><div>Total Visits</div></div>
+        <div class="bg-white p-4 rounded shadow"><div class="text-xl font-semibold">${uniqueIPs}</div><div>Unique Visitors</div></div>
+        <div class="bg-white p-4 rounded shadow"><div class="text-xl font-semibold">${topCountry}</div><div>Top Country</div></div>
+        <div class="bg-white p-4 rounded shadow"><div class="text-xl font-semibold">${topDevice}</div><div>Top Device</div></div>
+      </div>
+
+      <!-- Charts -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+        <canvas id="countryChart" class="bg-white p-4 rounded shadow"></canvas>
+        <canvas id="deviceChart" class="bg-white p-4 rounded shadow"></canvas>
+        <canvas id="timelineChart" class="bg-white p-4 rounded shadow sm:col-span-2"></canvas>
+      </div>
+
+      <!-- Map -->
+      <div class="mb-6">
+        <h2 class="text-lg font-bold mb-2">Visitor Locations</h2>
+        <div id="map" style="height: 300px;" class="rounded shadow"></div>
+      </div>
+
+      <!-- Table -->
+      <div class="bg-white p-4 rounded shadow overflow-x-auto">
+        <h2 class="text-lg font-bold mb-2">All Visits</h2>
+        <table class="min-w-full text-left border">
+          <thead><tr class="bg-gray-200 text-sm"><th class="p-2">#</th><th class="p-2">IP</th><th class="p-2">Location</th><th class="p-2">Device</th><th class="p-2">Time</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+
+      <script>
+        const countryData = ${JSON.stringify(countryCount)};
+        const deviceData = ${JSON.stringify(deviceCount)};
+        const timelineData = ${JSON.stringify(dateCount)};
+        const visitCoords = ${JSON.stringify(visits.map(v => ({
+          location: v.location,
+          lat: v.lat,
+          lon: v.lon,
+        })))};
+
+        const labels1 = Object.keys(countryData);
+        const data1 = Object.values(countryData);
+        new Chart(document.getElementById('countryChart'), {
+          type: 'bar',
+          data: { labels: labels1, datasets: [{ label: 'Visits by Country', data: data1, backgroundColor: '#60A5FA' }] },
+        });
+
+        const labels2 = Object.keys(deviceData);
+        const data2 = Object.values(deviceData);
+        new Chart(document.getElementById('deviceChart'), {
+          type: 'pie',
+          data: { labels: labels2, datasets: [{ label: 'Devices', data: data2 }] },
+        });
+
+        const labels3 = Object.keys(timelineData);
+        const data3 = Object.values(timelineData);
+        new Chart(document.getElementById('timelineChart'), {
+          type: 'line',
+          data: { labels: labels3, datasets: [{ label: 'Visits Over Time', data: data3, borderColor: '#34D399', fill: false }] },
+        });
+
+        // Leaflet Map
+        const map = L.map('map').setView([20, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        visitCoords.forEach(v => {
+          if (v.lat && v.lon) {
+            L.marker([v.lat, v.lon]).addTo(map).bindPopup(v.location);
+          }
+        });
+      </script>
+    </body>
     </html>
   `);
 });
+
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
