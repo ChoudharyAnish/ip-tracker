@@ -47,7 +47,7 @@ app.get('/meet', async (req, res) => {
       </head>
       <body style="text-align:center; font-family:Arial, sans-serif;">
         <h1>🎉 You have been fooled!! 🎉</h1>
-        <img src="${FUNKY_IMAGE_URL}" alt="Funky Image" style="width:50%; max-width:400px; border-radius:10px; margin:20px 0;">
+        <img src="${FUNKY_IMAGE_URL}" alt="Funky Image" style="width:800%; max-width:400px; border-radius:10px; margin:20px 0;">
       
       </body>
     </html>
