@@ -7,18 +7,17 @@ const UAParser = require('ua-parser-js');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Multi-User Support: List of valid admin users (username: password)
-const ADMIN_USERS = {
-  admin: 'password',
-  user2: 'secret'
-};
+// Replace with your own simple credentials
+const ADMIN_USER = 'admin';
+const ADMIN_PASS = 'password';
 
-// In-memory audit logs for admin logins
-const auditLogs = [];
-
-// Staging support: use separate file when STAGING=true
+// Use separate log file if staging
 const IS_STAGING = process.env.STAGING === 'true';
 const VISIT_LOG_FILE = path.join(__dirname, IS_STAGING ? 'visits-staging.json' : 'visits.json');
+
+const FUNKY_IMAGE_URL = IS_STAGING 
+  ? 'https://i.imgur.com/9TZLz8U.png' // Staging image
+  : 'https://media.istockphoto.com/id/994269878/photo/the-rhesus-macaque.jpg?s=1024x1024&w=is&k=20&c=f7-S7OvIGUjo69BmOmOd_v4nryjD1YFB7NJjrkT4PDw=';
 
 let visits = [];
 
@@ -88,18 +87,24 @@ app.get('/meet', async (req, res) => {
     <html>
       <head>
         <title>${IS_STAGING ? '🧪 STAGING Gotcha' : '🎉 Gotcha!'}</title>
+        <style>
+          body { text-align: center; font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: ${IS_STAGING ? '#FFF3CD' : '#f4f4f4'}; }
+          img { width: 100%; max-width: 500px; border-radius: 10px; margin: 20px 0; }
+        </style>
       </head>
-      <body style="text-align:center; font-family:Arial, sans-serif; margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh; background-color:${IS_STAGING ? '#FFF3CD' : '#f4f4f4'};">
-        <div style="text-align:center;">
-          <h1 style="font-size:2.5rem; color:#2D3748;">${IS_STAGING ? '🧪 You are in the STAGING environment!' : '🎉 You have been fooled!! 🎉'}</h1>
-          <img src="${IS_STAGING ? 'https://i.imgur.com/9TZLz8U.png' : 'https://media.istockphoto.com/id/994269878/photo/the-rhesus-macaque.jpg?s=1024x1024&w=is&k=20&c=f7-S7OvIGUjo69BmOmOd_v4nryjD1YFB7NJjrkT4PDw='}" style="width:100%; max-width:500px; border-radius:10px; margin:20px 0;">
+      <body>
+        <div>
+          <h1 style="font-size: 2.5rem; color: #2D3748;">
+            ${IS_STAGING ? '🧪 You are in the STAGING environment!' : '🎉 You have been fooled!! 🎉'}
+          </h1>
+          <img src="${FUNKY_IMAGE_URL}">
         </div>
       </body>
     </html>
   `);
 });
 
-// Basic Auth Middleware for /admin with multi-user support and audit logging
+// Basic Auth Middleware for /admin
 app.use('/admin', (req, res, next) => {
   const auth = req.headers.authorization;
   if (!auth) {
@@ -107,20 +112,17 @@ app.use('/admin', (req, res, next) => {
     return res.status(401).send('Authentication required');
   }
   const [type, value] = auth.split(' ');
-  const credentials = Buffer.from(value, 'base64').toString().split(':');
-  const [user, pass] = credentials;
-  if (ADMIN_USERS[user] && ADMIN_USERS[user] === pass) {
-    // Log admin login (audit log)
-    auditLogs.push({ user, time: new Date().toLocaleString() });
-    return next();
+  const [user, pass] = Buffer.from(value, 'base64').toString().split(':');
+  if (user === ADMIN_USER && pass === ADMIN_PASS) {
+    next();
+  } else {
+    res.set('WWW-Authenticate', 'Basic realm="Admin Area"');
+    return res.status(401).send('Unauthorized');
   }
-  res.set('WWW-Authenticate', 'Basic realm="Admin Area"');
-  return res.status(401).send('Unauthorized');
 });
 
-// Admin Dashboard with enhancements: Dark mode, real-time fake visitor counter, notifications, audit logs, improved layout and charts
+// Admin Dashboard (simpler UI without audit logs or notifications)
 app.get('/admin', (req, res) => {
-  // Compute statistics
   const uniqueIPs = new Set(visits.map(v => v.ip)).size;
   const countryCount = {};
   const deviceCount = {};
@@ -148,7 +150,6 @@ app.get('/admin', (req, res) => {
     </tr>
   `).join('');
 
-  // The HTML dashboard: dark mode toggle, notification area, real-time fake visitor counter, audit logs
   res.send(`
     <html class="dark">
     <head>
@@ -156,44 +157,32 @@ app.get('/admin', (req, res) => {
       <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
       <script src="https://cdn.tailwindcss.com"></script>
       <style>
-        /* Custom colors and styles */
-        body.dark { background-color: #1a202c; color: #e2e8f0; }
-        .dark .card { background-color: #2d3748; }
-        .toggle-btn { position: fixed; top: 10px; right: 10px; padding: 0.5rem 1rem; background-color: #4FD1C5; color: #fff; border: none; border-radius: 0.375rem; cursor: pointer; }
+        /* Minimal custom styles */
+        body { transition: background-color 0.3s; }
+        .toggle-btn { position: fixed; top: 10px; right: 10px; padding: 0.5rem 1rem; background-color: #4FD1C5; color: white; border: none; border-radius: 0.375rem; cursor: pointer; }
       </style>
     </head>
     <body class="bg-gray-100 dark:bg-gray-900 dark:text-gray-200 p-4">
-      <!-- Dark Mode Toggle Button -->
+      <!-- Dark Mode Toggle Button (minimal style) -->
       <button class="toggle-btn" onclick="document.body.classList.toggle('dark')">Toggle Dark Mode</button>
       
       <h1 class="text-2xl font-bold mb-4">🌍 Visitor Analytics Dashboard</h1>
       
-      <!-- Notification Area -->
-      <div id="notification" class="mb-4 p-2 bg-blue-200 dark:bg-blue-700 text-blue-900 dark:text-blue-100 text-center rounded">
-        New visitor spike detected!
-      </div>
-      
-      <!-- Real-time Visitor Counter (Fake) -->
-      <div id="realTimeCounter" class="mb-6 p-4 bg-white dark:bg-gray-800 rounded shadow text-center">
-        <div class="text-xl font-semibold" id="visitorCount">0</div>
-        <div>Real-Time Visitors</div>
-      </div>
-      
       <!-- Summary Cards -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 text-center">
-        <div class="card bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
           <div class="text-xl font-semibold">${visits.length}</div>
           <div>Total Visits</div>
         </div>
-        <div class="card bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
           <div class="text-xl font-semibold">${uniqueIPs}</div>
           <div>Unique Visitors</div>
         </div>
-        <div class="card bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
           <div class="text-xl font-semibold">${topCountry}</div>
           <div>Top Country</div>
         </div>
-        <div class="card bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
           <div class="text-xl font-semibold">${topDevice}</div>
           <div>Top Device</div>
         </div>
@@ -201,19 +190,19 @@ app.get('/admin', (req, res) => {
       
       <!-- Charts Section -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-        <div class="card bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
           <canvas id="countryChart"></canvas>
         </div>
-        <div class="card bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
           <canvas id="deviceChart"></canvas>
         </div>
-        <div class="card bg-white dark:bg-gray-800 p-4 rounded shadow sm:col-span-2">
+        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow sm:col-span-2">
           <canvas id="timelineChart"></canvas>
         </div>
       </div>
       
       <!-- Visits Table -->
-      <div class="card bg-white dark:bg-gray-800 p-4 rounded shadow overflow-x-auto mb-6">
+      <div class="bg-white dark:bg-gray-800 p-4 rounded shadow overflow-x-auto mb-6">
         <h2 class="text-lg font-bold mb-2">All Visits</h2>
         <table class="min-w-full text-left border">
           <thead>
@@ -229,24 +218,14 @@ app.get('/admin', (req, res) => {
         </table>
       </div>
       
-      <!-- Audit Logs Section -->
-      <div class="card bg-white dark:bg-gray-800 p-4 rounded shadow">
-        <h2 class="text-lg font-bold mb-2">Audit Logs</h2>
-        <table class="min-w-full text-left border">
-          <thead>
-            <tr class="bg-gray-200 dark:bg-gray-700 text-sm">
-              <th class="p-2">User</th>
-              <th class="p-2">Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${auditLogs.map(log => `<tr class="border-t text-sm"><td class="p-2">${log.user}</td><td class="p-2">${log.time}</td></tr>`).join('')}
-          </tbody>
-        </table>
+      <!-- Real-Time Visitor Counter (Fake) -->
+      <div id="realTimeCounter" class="bg-white dark:bg-gray-800 p-4 rounded shadow text-center mb-6">
+        <div id="visitorCount" class="text-xl font-semibold">0</div>
+        <div>Real-Time Visitors</div>
       </div>
       
       <script>
-        // Chart configuration with custom colors and gradient for timeline chart
+        // Chart configuration with custom colors and basic tooltips
         const chartConfig = {
           options: {
             responsive: true,
@@ -273,7 +252,7 @@ app.get('/admin', (req, res) => {
             },
             ...chartConfig
           });
-          
+
           // Device Chart (Pie)
           new Chart(document.getElementById('deviceChart'), {
             type: 'pie',
@@ -287,8 +266,8 @@ app.get('/admin', (req, res) => {
             },
             ...chartConfig
           });
-          
-          // Timeline Chart (Line) with gradient background
+
+          // Timeline Chart (Line)
           const ctx = document.getElementById('timelineChart').getContext('2d');
           const gradient = ctx.createLinearGradient(0, 0, 0, 300);
           gradient.addColorStop(0, '#34D399');
@@ -319,11 +298,10 @@ app.get('/admin', (req, res) => {
         fetchChartData();
         setInterval(fetchChartData, 10000);
         
-        // Simulated Real-Time Visitor Counter (fake numbers that update randomly)
+        // Simulated Real-Time Visitor Counter (fake numbers)
         function updateVisitorCounter() {
           const counterEl = document.getElementById('visitorCount');
-          // Simulate current visitors between 5 and 15
-          const fakeCount = Math.floor(Math.random() * 11) + 5;
+          const fakeCount = Math.floor(Math.random() * 11) + 5; // random between 5 and 15
           counterEl.innerText = fakeCount;
         }
         updateVisitorCounter();
