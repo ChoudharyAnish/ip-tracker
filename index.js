@@ -11,12 +11,12 @@ const PORT = process.env.PORT || 10000;
 const ADMIN_USER = 'admin';
 const ADMIN_PASS = 'password';
 
-// Use separate log file if staging
+// Use separate file when staging
 const IS_STAGING = process.env.STAGING === 'true';
 const VISIT_LOG_FILE = path.join(__dirname, IS_STAGING ? 'visits-staging.json' : 'visits.json');
 
 const FUNKY_IMAGE_URL = IS_STAGING 
-  ? 'https://i.imgur.com/9TZLz8U.png' // Staging image
+  ? 'https://media.istockphoto.com/id/1206006585/photo/girl-painting-picture-stock-photo.webp?a=1&b=1&s=612x612&w=0&k=20&c=GDmdQRNHpxddU50QCKcA28dPZ24nP0DEQCG_yasu6N8=' // Staging image
   : 'https://media.istockphoto.com/id/994269878/photo/the-rhesus-macaque.jpg?s=1024x1024&w=is&k=20&c=f7-S7OvIGUjo69BmOmOd_v4nryjD1YFB7NJjrkT4PDw=';
 
 let visits = [];
@@ -40,7 +40,7 @@ function saveVisitsDebounced() {
   clearTimeout(saveVisitsDebounced._t);
   saveVisitsDebounced._t = setTimeout(() => {
     fs.writeFileSync(VISIT_LOG_FILE, JSON.stringify(visits, null, 2));
-  }, 1000);
+  }, 1000); 
 }
 
 // /meet endpoint
@@ -88,15 +88,13 @@ app.get('/meet', async (req, res) => {
       <head>
         <title>${IS_STAGING ? '🧪 STAGING Gotcha' : '🎉 Gotcha!'}</title>
         <style>
-          body { text-align: center; font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: ${IS_STAGING ? '#FFF3CD' : '#f4f4f4'}; }
-          img { width: 100%; max-width: 500px; border-radius: 10px; margin: 20px 0; }
+          body { text-align:center; font-family:Arial, sans-serif; margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh; background-color: ${IS_STAGING ? '#FFF3CD' : '#f4f4f4'}; }
+          img { width:100%; max-width:500px; border-radius:10px; margin:20px 0; }
         </style>
       </head>
       <body>
         <div>
-          <h1 style="font-size: 2.5rem; color: #2D3748;">
-            ${IS_STAGING ? '🧪 You are in the STAGING environment!' : '🎉 You have been fooled!! 🎉'}
-          </h1>
+          <h1 style="font-size:2.5rem; color:#000;">${IS_STAGING ? '🧪 You are in the STAGING environment!' : '🎉 You have been fooled!! 🎉'}</h1>
           <img src="${FUNKY_IMAGE_URL}">
         </div>
       </body>
@@ -121,7 +119,7 @@ app.use('/admin', (req, res, next) => {
   }
 });
 
-// Admin Dashboard (simpler UI without audit logs or notifications)
+// Admin Dashboard with Minimal Black and White UI
 app.get('/admin', (req, res) => {
   const uniqueIPs = new Set(visits.map(v => v.ip)).size;
   const countryCount = {};
@@ -141,91 +139,94 @@ app.get('/admin', (req, res) => {
   const topDevice = Object.entries(deviceCount).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
 
   const tableRows = visits.map(v => `
-    <tr class="border-t text-sm">
-      <td class="p-2">${v.visit}</td>
-      <td class="p-2">${v.ip}</td>
-      <td class="p-2">${v.location}</td>
-      <td class="p-2">${v.deviceType || 'Unknown'}</td>
-      <td class="p-2">${new Date(v.time).toLocaleString()}</td>
+    <tr style="border-top: 1px solid #000; font-size: 0.9rem;">
+      <td style="padding: 6px;">${v.visit}</td>
+      <td style="padding: 6px;">${v.ip}</td>
+      <td style="padding: 6px;">${v.location}</td>
+      <td style="padding: 6px;">${v.deviceType || 'Unknown'}</td>
+      <td style="padding: 6px;">${new Date(v.time).toLocaleString()}</td>
     </tr>
   `).join('');
 
   res.send(`
-    <html class="dark">
+    <html>
     <head>
       <title>Visitor Dashboard</title>
       <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-      <script src="https://cdn.tailwindcss.com"></script>
       <style>
-        /* Minimal custom styles */
-        body { transition: background-color 0.3s; }
-        .toggle-btn { position: fixed; top: 10px; right: 10px; padding: 0.5rem 1rem; background-color: #4FD1C5; color: white; border: none; border-radius: 0.375rem; cursor: pointer; }
+        /* Minimal Black and White CSS */
+        body { font-family: Arial, sans-serif; background-color: #fff; color: #000; margin: 0; padding: 20px; }
+        h1, h2 { margin: 0 0 20px 0; }
+        .grid { display: grid; gap: 20px; }
+        .grid-4 { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+        .card { padding: 15px; border: 1px solid #000; border-radius: 4px; background-color: #fff; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background-color: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #000; }
+        td { padding: 8px; border: 1px solid #000; }
+        canvas { width: 100% !important; height: 300px !important; }
       </style>
     </head>
-    <body class="bg-gray-100 dark:bg-gray-900 dark:text-gray-200 p-4">
-      <!-- Dark Mode Toggle Button (minimal style) -->
-      <button class="toggle-btn" onclick="document.body.classList.toggle('dark')">Toggle Dark Mode</button>
-      
-      <h1 class="text-2xl font-bold mb-4">🌍 Visitor Analytics Dashboard</h1>
+    <body>
+      <h1>Visitor Analytics Dashboard</h1>
       
       <!-- Summary Cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 text-center">
-        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
-          <div class="text-xl font-semibold">${visits.length}</div>
+      <div class="grid grid-4" style="margin-bottom: 20px;">
+        <div class="card">
+          <div style="font-size: 1.5rem; font-weight: bold;">${visits.length}</div>
           <div>Total Visits</div>
         </div>
-        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
-          <div class="text-xl font-semibold">${uniqueIPs}</div>
+        <div class="card">
+          <div style="font-size: 1.5rem; font-weight: bold;">${uniqueIPs}</div>
           <div>Unique Visitors</div>
         </div>
-        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
-          <div class="text-xl font-semibold">${topCountry}</div>
+        <div class="card">
+          <div style="font-size: 1.5rem; font-weight: bold;">${topCountry}</div>
           <div>Top Country</div>
         </div>
-        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
-          <div class="text-xl font-semibold">${topDevice}</div>
+        <div class="card">
+          <div style="font-size: 1.5rem; font-weight: bold;">${topDevice}</div>
           <div>Top Device</div>
         </div>
       </div>
       
       <!-- Charts Section -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+      <div class="grid grid-2" style="margin-bottom: 20px;">
+        <div class="card">
           <canvas id="countryChart"></canvas>
         </div>
-        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <div class="card">
           <canvas id="deviceChart"></canvas>
         </div>
-        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow sm:col-span-2">
+        <div class="card" style="grid-column: span 2;">
           <canvas id="timelineChart"></canvas>
         </div>
       </div>
       
-      <!-- Visits Table -->
-      <div class="bg-white dark:bg-gray-800 p-4 rounded shadow overflow-x-auto mb-6">
-        <h2 class="text-lg font-bold mb-2">All Visits</h2>
-        <table class="min-w-full text-left border">
-          <thead>
-            <tr class="bg-gray-200 dark:bg-gray-700 text-sm">
-              <th class="p-2">#</th>
-              <th class="p-2">IP</th>
-              <th class="p-2">Location</th>
-              <th class="p-2">Device</th>
-              <th class="p-2">Time</th>
-            </tr>
-          </thead>
-          <tbody>${tableRows}</tbody>
-        </table>
-      </div>
-      
-      <!-- Real-Time Visitor Counter (Fake) -->
-      <div id="realTimeCounter" class="bg-white dark:bg-gray-800 p-4 rounded shadow text-center mb-6">
-        <div id="visitorCount" class="text-xl font-semibold">0</div>
+            <!-- Real-Time Visitor Counter (Fake) -->
+      <div class="card" style="text-align: center;">
+        <div style="font-size: 1.5rem; font-weight: bold;" id="visitorCount">0</div>
         <div>Real-Time Visitors</div>
       </div>
       
+      <!-- Visits Table -->
+      <div class="card" style="overflow-x: auto; margin-bottom: 20px;">
+        <h2>All Visits</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>IP</th><th>Location</th><th>Device</th><th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      </div>
+      
+      
       <script>
-        // Chart configuration with custom colors and basic tooltips
+        // Chart configuration with custom colors and gradient for timeline chart
         const chartConfig = {
           options: {
             responsive: true,
@@ -267,7 +268,7 @@ app.get('/admin', (req, res) => {
             ...chartConfig
           });
 
-          // Timeline Chart (Line)
+          // Timeline Chart (Line) with gradient
           const ctx = document.getElementById('timelineChart').getContext('2d');
           const gradient = ctx.createLinearGradient(0, 0, 0, 300);
           gradient.addColorStop(0, '#34D399');
@@ -298,10 +299,10 @@ app.get('/admin', (req, res) => {
         fetchChartData();
         setInterval(fetchChartData, 10000);
         
-        // Simulated Real-Time Visitor Counter (fake numbers)
+        // Simulated Real-Time Visitor Counter (Fake numbers)
         function updateVisitorCounter() {
           const counterEl = document.getElementById('visitorCount');
-          const fakeCount = Math.floor(Math.random() * 11) + 5; // random between 5 and 15
+          const fakeCount = Math.floor(Math.random() * 101) + 25;
           counterEl.innerText = fakeCount;
         }
         updateVisitorCounter();
