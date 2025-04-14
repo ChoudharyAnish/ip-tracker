@@ -296,6 +296,7 @@ app.get('/creepy', async (req, res) => {
     </body>
   </html>
   `);
+});
 
 // Basic Auth Middleware for /admin
 app.use('/admin', (req, res, next) => {
