@@ -93,119 +93,209 @@ app.get('/creepy', async (req, res) => {
   console.log(`🌍 Total Visits: ${visits.length}`);
 
   // Creepy Page content
-  res.send(`
-    <html>
-      <head>
-        <title>Creepy Experience</title>
-        <style>
-          body {
-            text-align: center;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-            color: #fff;
-            overflow: hidden;
-          }
-          h3 {
-            font-size: 2rem;
-            color: #f00;
-            margin: 20px 0;
-            text-shadow: 0 0 10px red, 0 0 20px red;
-          }
-          img {
-            width: 100%;
-            max-width: 500px;
-            border-radius: 10px;
-            margin: 20px 0;
-            box-shadow: 0 0 30px red;
-            animation: glitch 1.5s infinite;
-          }
-          @keyframes glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-5px, 5px); }
-            40% { transform: translate(5px, -5px); }
-            60% { transform: translate(-5px, -5px); }
-            80% { transform: translate(5px, 5px); }
-            100% { transform: translate(0); }
-          }
-          .alert {
-            font-size: 1.5rem;
-            color: #ff00ff;
-            animation: alert 0.5s infinite;
-          }
-          @keyframes alert {
-            0% { opacity: 1; }
-            50% { opacity: 0; }
-            100% { opacity: 1; }
-          }
-          .malfunction {
-            font-size: 1.2rem;
-            color: #ffcc00;
-            text-shadow: 0 0 15px #ff0000;
-            animation: blink 1s step-end infinite;
-          }
-          @keyframes blink {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
-          }
-          .emoji {
-            position: absolute;
-            font-size: 2rem;
-            animation: floatDown 5s linear infinite;
-          }
-          @keyframes floatDown {
-            0% { top: -5%; opacity: 1; }
-            100% { top: 105%; opacity: 0; }
-          }
-          .button {
-            margin-top: 20px;
-            background-color: red;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            font-size: 1rem;
-            cursor: pointer;
-            box-shadow: 0 0 15px red;
-          }
-        </style>
-      </head>
-      <body>
-        <h3>Warning: Something is very wrong!</h3>
-        <img src="${FUNKY_IMAGE_URL}" alt="Creepy Image" />
-        <p class="alert">⚠️ Unauthorized Access Detected!</p>
-        <p class="malfunction">System Malfunctioning... Please wait...</p>
-        <button class="button" onclick="alert('💥 Self-Destruct Sequence Initiated! Just kidding 😈')">Self Destruct</button>
+   res.send(`
+  <html>
+    <head>
+      <title>Chaos Arcade 🎮</title>
+      <style>
+        body {
+          font-family: 'Comic Sans MS', cursive, sans-serif;
+          background: linear-gradient(135deg, #ffcccc, #ccffff);
+          margin: 0;
+          padding: 0;
+          text-align: center;
+        }
+        h1 { font-size: 3rem; margin-top: 30px; }
+        button {
+          padding: 12px 20px;
+          margin: 10px;
+          font-size: 1.2rem;
+          cursor: pointer;
+          border: none;
+          border-radius: 8px;
+          background: #ff66cc;
+          color: white;
+        }
+        #game-area > div {
+          display: none;
+          margin-top: 30px;
+        }
+        .active { display: block !important; }
+        .monkey {
+          position: absolute;
+          width: 100px;
+          cursor: pointer;
+          transition: top 0.1s, left 0.1s;
+        }
+        #banana-player {
+          position: absolute;
+          bottom: 10px;
+          left: 50%;
+          width: 60px;
+          height: 60px;
+          background: #ffcc00;
+          border-radius: 50%;
+          transform: translateX(-50%);
+        }
+        .banana {
+          position: absolute;
+          top: 0;
+          width: 30px;
+          height: 30px;
+          background: url('https://emojicdn.elk.sh/🍌') no-repeat center/contain;
+        }
+        #hack-output {
+          font-family: monospace;
+          background: black;
+          color: green;
+          padding: 15px;
+          height: 200px;
+          overflow-y: auto;
+          text-align: left;
+          margin: 0 10%;
+          border-radius: 10px;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Welcome to the Chaos Arcade 🎮</h1>
+      <div>
+        <button onclick="showGame('monkeyGame')">🐒 Catch the Monkey</button>
+        <button onclick="showGame('clickGame')">🟥 Do Not Click</button>
+        <button onclick="showGame('bananaGame')">🍌 Banana Rain</button>
+        <button onclick="showGame('hackGame')">💻 Hack the System</button>
+      </div>
 
-        <script>
-          // Flashing message
+      <div id="game-area">
+        <!-- Monkey Game -->
+        <div id="monkeyGame">
+          <h2>Catch the Monkey!</h2>
+          <p>Score: <span id="monkeyScore">0</span></p>
+          <img id="monkey" class="monkey" src="https://emojicdn.elk.sh/🐒" />
+        </div>
+
+        <!-- Do Not Click Game -->
+        <div id="clickGame">
+          <h2>DO NOT CLICK THE BUTTON 😈</h2>
+          <p>Clicks: <span id="clickScore">0</span></p>
+          <button onclick="clickMadness()">DO NOT CLICK</button>
+          <div id="clickSpamArea"></div>
+        </div>
+
+        <!-- Banana Rain Game -->
+        <div id="bananaGame">
+          <h2>Catch the Bananas!</h2>
+          <p>Score: <span id="bananaScore">0</span></p>
+          <div id="banana-player"></div>
+        </div>
+
+        <!-- Hack Game -->
+        <div id="hackGame">
+          <h2>Hack the System</h2>
+          <input id="hackInput" type="text" placeholder="Type a command..." onkeydown="if(event.key === 'Enter') hackCommand()" />
+          <div id="hack-output"></div>
+        </div>
+      </div>
+
+      <script>
+        function showGame(id) {
+          document.querySelectorAll('#game-area > div').forEach(div => div.classList.remove('active'));
+          document.getElementById(id).classList.add('active');
+
+          if (id === 'monkeyGame') startMonkeyGame();
+          if (id === 'bananaGame') startBananaRain();
+        }
+
+        // Catch the Monkey
+        let monkeyScore = 0;
+        function startMonkeyGame() {
+          const monkey = document.getElementById("monkey");
+          const moveMonkey = () => {
+            monkey.style.top = Math.random() * 80 + "vh";
+            monkey.style.left = Math.random() * 80 + "vw";
+          };
+          monkey.onclick = () => {
+            monkeyScore++;
+            document.getElementById("monkeyScore").innerText = monkeyScore;
+            moveMonkey();
+          };
+          moveMonkey();
+        }
+
+        // Click Madness
+        let clickScore = 0;
+        function clickMadness() {
+          clickScore++;
+          document.getElementById("clickScore").innerText = clickScore;
+          const btn = document.createElement("button");
+          btn.innerText = "STOP!";
+          btn.style.margin = "4px";
+          btn.onclick = () => alert("Too late!");
+          document.getElementById("clickSpamArea").appendChild(btn);
+          document.body.style.backgroundColor = "#" + Math.floor(Math.random()*16777215).toString(16);
+        }
+
+        // Banana Rain Game
+        let bananaScore = 0;
+        function startBananaRain() {
+          const player = document.getElementById("banana-player");
+          const gameArea = document.getElementById("bananaGame");
+
+          document.onkeydown = function(e) {
+            const left = parseInt(window.getComputedStyle(player).left);
+            if (e.key === "ArrowLeft") player.style.left = Math.max(0, left - 50) + "px";
+            if (e.key === "ArrowRight") player.style.left = Math.min(window.innerWidth - 60, left + 50) + "px";
+          };
+
           setInterval(() => {
-            const msg = document.querySelector('.malfunction');
-            msg.style.opacity = msg.style.opacity === "1" ? "0.5" : "1";
+            const banana = document.createElement("div");
+            banana.className = "banana";
+            banana.style.left = Math.random() * window.innerWidth + "px";
+            gameArea.appendChild(banana);
+
+            let top = 0;
+            const fall = setInterval(() => {
+              top += 5;
+              banana.style.top = top + "px";
+              const playerRect = player.getBoundingClientRect();
+              const bananaRect = banana.getBoundingClientRect();
+              if (top > window.innerHeight - 80 &&
+                  bananaRect.left < playerRect.right &&
+                  bananaRect.right > playerRect.left) {
+                bananaScore++;
+                document.getElementById("bananaScore").innerText = bananaScore;
+                banana.remove();
+                clearInterval(fall);
+              }
+              if (top > window.innerHeight) {
+                banana.remove();
+                clearInterval(fall);
+              }
+            }, 50);
           }, 1000);
+        }
 
-          // Random alert popup
-          setInterval(() => {
-            alert("⚠️ SYSTEM ERROR: Unusual Activity Detected!");
-          }, 5000);
-
-          // Emoji Rain
-          const emojis = ["🐒","🧠","💥","👀","😱","🔥","🤖","👻"];
-          setInterval(() => {
-            const emoji = document.createElement("div");
-            emoji.classList.add("emoji");
-            emoji.style.left = Math.random() * 100 + "%";
-            emoji.style.top = "-5%";
-            emoji.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-            document.body.appendChild(emoji);
-            setTimeout(() => emoji.remove(), 6000);
-          }, 300);
-        </script>
-      </body>
-    </html>
+        // Hack the System
+        function hackCommand() {
+          const input = document.getElementById("hackInput");
+          const output = document.getElementById("hack-output");
+          const val = input.value.trim();
+          const replies = [
+            "ACCESS GRANTED ✅",
+            "DEPLOYING BANANA BOTS 🍌",
+            "CRITICAL ERROR 0xDEADBEEF 💀",
+            "MONKEYS ARE TAKING OVER 🐒",
+            "SYSTEM OVERRIDE... COMPLETE 🔐"
+          ];
+          const response = replies[Math.floor(Math.random() * replies.length)];
+          output.innerHTML += "$ " + val + "<br>" + response + "<br>";
+          input.value = "";
+          output.scrollTop = output.scrollHeight;
+        }
+      </script>
+    </body>
+  </html>
   `);
-});
 
 // Basic Auth Middleware for /admin
 app.use('/admin', (req, res, next) => {
