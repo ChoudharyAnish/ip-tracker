@@ -98,54 +98,146 @@ app.get('/creepy', async (req, res) => {
       <head>
         <title>Creepy Experience</title>
         <style>
-          body { text-align:center; font-family:Arial, sans-serif; margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh; background-color: #000; color: #fff; }
-          h3 { font-size:2rem; color:#f00; margin:20px 0; text-shadow: 0 0 10px red, 0 0 20px red; }
-          img { width:100%; max-width:500px; border-radius:10px; margin:20px 0; box-shadow: 0 0 30px red; animation: glitch 1.5s infinite; }
+          body { 
+            text-align:center; 
+            font-family:Arial, sans-serif; 
+            margin:0; 
+            padding:0; 
+            display:flex; 
+            justify-content:center; 
+            align-items:center; 
+            height:100vh; 
+            background: radial-gradient(circle, #000 0%, #111 100%); 
+            color: #fff; 
+            overflow: hidden;
+          }
+          h3 { 
+            font-size:2rem; 
+            color:#f00; 
+            margin:20px 0; 
+            text-shadow: 0 0 10px red, 0 0 20px red; 
+          }
+          img { 
+            width:100%; 
+            max-width:500px; 
+            border-radius:10px; 
+            margin:20px 0; 
+            box-shadow: 0 0 30px red; 
+            animation: glitch 1.5s infinite; 
+          }
+          .alert { font-size: 1.5rem; color: #ff00ff; animation: alert 0.5s infinite; }
+          .malfunction { font-size: 1.2rem; color: #ffcc00; text-shadow: 0 0 15px #ff0000; animation: blink 1s step-end infinite; }
           @keyframes glitch {
-            0% { transform: translate(0); }
+            0%, 100% { transform: translate(0); }
             20% { transform: translate(-5px, 5px); }
             40% { transform: translate(5px, -5px); }
             60% { transform: translate(-5px, -5px); }
             80% { transform: translate(5px, 5px); }
-            100% { transform: translate(0); }
           }
-          .alert { font-size: 1.5rem; color: #ff00ff; animation: alert 0.5s infinite; }
           @keyframes alert {
-            0% { opacity: 1; }
+            0%, 100% { opacity: 1; }
             50% { opacity: 0; }
-            100% { opacity: 1; }
           }
-          .malfunction { font-size: 1.2rem; color: #ffcc00; text-shadow: 0 0 15px #ff0000; animation: blink 1s step-end infinite; }
           @keyframes blink {
-            0% { opacity: 0.5; }
+            0%, 100% { opacity: 0.5; }
             50% { opacity: 1; }
-            100% { opacity: 0.5; }
+          }
+          #emojiRain span {
+            position: absolute;
+            animation: fall 5s linear infinite;
+            font-size: 2rem;
+          }
+          @keyframes fall {
+            0% { top: -50px; }
+            100% { top: 110vh; }
+          }
+          .trail {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: lime;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: fade 1s forwards;
+          }
+          @keyframes fade {
+            to { opacity: 0; transform: scale(2); }
+          }
+          .explode-btn {
+            background: red;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px red;
+            animation: alert 1s infinite;
           }
         </style>
       </head>
       <body>
+        <div id="emojiRain"></div>
         <div style="max-width:600px; margin:auto; text-align:center;">
           <h3>Warning: Something is very wrong!</h3>
           <img src="${FUNKY_IMAGE_URL}" alt="Creepy Image" />
           <p class="alert">Warning: Unauthorized Access Detected!</p>
           <p class="malfunction">System Malfunctioning... Please wait...</p>
+          <button class="explode-btn" onclick="explode()">SELF-DESTRUCT</button>
         </div>
+
+        <audio autoplay>
+          <source src="https://www.myinstants.com/media/sounds/vine-boom.mp3" type="audio/mpeg">
+        </audio>
+
         <script>
-          // Random malfunctioning alert
+          // System Error pop-up
           setInterval(() => {
             alert("⚠️ SYSTEM ERROR: Unusual Activity Detected!");
-          }, 5000); // Every 5 seconds
+          }, 5000);
 
-          // Flashing message
+          // Blink malfunction message
           setInterval(() => {
             const msg = document.querySelector('.malfunction');
             msg.style.opacity = msg.style.opacity === "1" ? "0.5" : "1";
-          }, 1000); // Blink every 1 second
+          }, 1000);
+
+          // Emoji Rain
+          const emojiList = ["😵", "👻", "🔥", "🤖", "💀", "😈"];
+          const emojiContainer = document.getElementById('emojiRain');
+          setInterval(() => {
+            const emoji = document.createElement('span');
+            emoji.textContent = emojiList[Math.floor(Math.random() * emojiList.length)];
+            emoji.style.left = Math.random() * 100 + "vw";
+            emojiContainer.appendChild(emoji);
+            setTimeout(() => emoji.remove(), 6000);
+          }, 300);
+
+          // Mouse Trail Effect
+          document.addEventListener('mousemove', e => {
+            const trail = document.createElement('div');
+            trail.className = 'trail';
+            trail.style.left = e.pageX + 'px';
+            trail.style.top = e.pageY + 'px';
+            document.body.appendChild(trail);
+            setTimeout(() => trail.remove(), 1000);
+          });
+
+          // Fake Self-Destruct
+          function explode() {
+            document.body.style.background = 'red';
+            document.body.style.transition = 'background 0.2s';
+            alert("💥 Boom! Just kidding 😄");
+            for (let i = 0; i < 5; i++) {
+              setTimeout(() => window.scrollTo(0, Math.random() * 1000), i * 100);
+            }
+          }
         </script>
       </body>
     </html>
   `);
-});
+
 
 // Basic Auth Middleware for /admin
 app.use('/admin', (req, res, next) => {
