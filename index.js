@@ -98,146 +98,114 @@ app.get('/creepy', async (req, res) => {
       <head>
         <title>Creepy Experience</title>
         <style>
-          body { 
-            text-align:center; 
-            font-family:Arial, sans-serif; 
-            margin:0; 
-            padding:0; 
-            display:flex; 
-            justify-content:center; 
-            align-items:center; 
-            height:100vh; 
-            background: radial-gradient(circle, #000 0%, #111 100%); 
-            color: #fff; 
+          body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
             overflow: hidden;
           }
-          h3 { 
-            font-size:2rem; 
-            color:#f00; 
-            margin:20px 0; 
-            text-shadow: 0 0 10px red, 0 0 20px red; 
+          h3 {
+            font-size: 2rem;
+            color: #f00;
+            margin: 20px 0;
+            text-shadow: 0 0 10px red, 0 0 20px red;
           }
-          img { 
-            width:100%; 
-            max-width:500px; 
-            border-radius:10px; 
-            margin:20px 0; 
-            box-shadow: 0 0 30px red; 
-            animation: glitch 1.5s infinite; 
+          img {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 0 30px red;
+            animation: glitch 1.5s infinite;
           }
-          .alert { font-size: 1.5rem; color: #ff00ff; animation: alert 0.5s infinite; }
-          .malfunction { font-size: 1.2rem; color: #ffcc00; text-shadow: 0 0 15px #ff0000; animation: blink 1s step-end infinite; }
           @keyframes glitch {
-            0%, 100% { transform: translate(0); }
+            0% { transform: translate(0); }
             20% { transform: translate(-5px, 5px); }
             40% { transform: translate(5px, -5px); }
             60% { transform: translate(-5px, -5px); }
             80% { transform: translate(5px, 5px); }
+            100% { transform: translate(0); }
+          }
+          .alert {
+            font-size: 1.5rem;
+            color: #ff00ff;
+            animation: alert 0.5s infinite;
           }
           @keyframes alert {
-            0%, 100% { opacity: 1; }
+            0% { opacity: 1; }
             50% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+          .malfunction {
+            font-size: 1.2rem;
+            color: #ffcc00;
+            text-shadow: 0 0 15px #ff0000;
+            animation: blink 1s step-end infinite;
           }
           @keyframes blink {
-            0%, 100% { opacity: 0.5; }
+            0% { opacity: 0.5; }
             50% { opacity: 1; }
+            100% { opacity: 0.5; }
           }
-          #emojiRain span {
+          .emoji {
             position: absolute;
-            animation: fall 5s linear infinite;
             font-size: 2rem;
+            animation: floatDown 5s linear infinite;
           }
-          @keyframes fall {
-            0% { top: -50px; }
-            100% { top: 110vh; }
+          @keyframes floatDown {
+            0% { top: -5%; opacity: 1; }
+            100% { top: 105%; opacity: 0; }
           }
-          .trail {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: lime;
-            border-radius: 50%;
-            pointer-events: none;
-            animation: fade 1s forwards;
-          }
-          @keyframes fade {
-            to { opacity: 0; transform: scale(2); }
-          }
-          .explode-btn {
-            background: red;
+          .button {
+            margin-top: 20px;
+            background-color: red;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 20px;
             font-size: 1rem;
             cursor: pointer;
-            border-radius: 5px;
-            margin-top: 20px;
-            box-shadow: 0 0 10px red;
-            animation: alert 1s infinite;
+            box-shadow: 0 0 15px red;
           }
         </style>
       </head>
       <body>
-        <div id="emojiRain"></div>
-        <div style="max-width:600px; margin:auto; text-align:center;">
-          <h3>Warning: Something is very wrong!</h3>
-          <img src="${FUNKY_IMAGE_URL}" alt="Creepy Image" />
-          <p class="alert">Warning: Unauthorized Access Detected!</p>
-          <p class="malfunction">System Malfunctioning... Please wait...</p>
-          <button class="explode-btn" onclick="explode()">SELF-DESTRUCT</button>
-        </div>
-
-        <audio autoplay>
-          <source src="https://www.myinstants.com/media/sounds/vine-boom.mp3" type="audio/mpeg">
-        </audio>
+        <h3>Warning: Something is very wrong!</h3>
+        <img src="${FUNKY_IMAGE_URL}" alt="Creepy Image" />
+        <p class="alert">⚠️ Unauthorized Access Detected!</p>
+        <p class="malfunction">System Malfunctioning... Please wait...</p>
+        <button class="button" onclick="alert('💥 Self-Destruct Sequence Initiated! Just kidding 😈')">Self Destruct</button>
 
         <script>
-          // System Error pop-up
-          setInterval(() => {
-            alert("⚠️ SYSTEM ERROR: Unusual Activity Detected!");
-          }, 5000);
-
-          // Blink malfunction message
+          // Flashing message
           setInterval(() => {
             const msg = document.querySelector('.malfunction');
             msg.style.opacity = msg.style.opacity === "1" ? "0.5" : "1";
           }, 1000);
 
-          // Emoji Rain
-          const emojiList = ["😵", "👻", "🔥", "🤖", "💀", "😈"];
-          const emojiContainer = document.getElementById('emojiRain');
+          // Random alert popup
           setInterval(() => {
-            const emoji = document.createElement('span');
-            emoji.textContent = emojiList[Math.floor(Math.random() * emojiList.length)];
-            emoji.style.left = Math.random() * 100 + "vw";
-            emojiContainer.appendChild(emoji);
+            alert("⚠️ SYSTEM ERROR: Unusual Activity Detected!");
+          }, 5000);
+
+          // Emoji Rain
+          const emojis = ["🐒","🧠","💥","👀","😱","🔥","🤖","👻"];
+          setInterval(() => {
+            const emoji = document.createElement("div");
+            emoji.classList.add("emoji");
+            emoji.style.left = Math.random() * 100 + "%";
+            emoji.style.top = "-5%";
+            emoji.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            document.body.appendChild(emoji);
             setTimeout(() => emoji.remove(), 6000);
           }, 300);
-
-          // Mouse Trail Effect
-          document.addEventListener('mousemove', e => {
-            const trail = document.createElement('div');
-            trail.className = 'trail';
-            trail.style.left = e.pageX + 'px';
-            trail.style.top = e.pageY + 'px';
-            document.body.appendChild(trail);
-            setTimeout(() => trail.remove(), 1000);
-          });
-
-          // Fake Self-Destruct
-          function explode() {
-            document.body.style.background = 'red';
-            document.body.style.transition = 'background 0.2s';
-            alert("💥 Boom! Just kidding 😄");
-            for (let i = 0; i < 5; i++) {
-              setTimeout(() => window.scrollTo(0, Math.random() * 1000), i * 100);
-            }
-          }
         </script>
       </body>
     </html>
   `);
-
+});
 
 // Basic Auth Middleware for /admin
 app.use('/admin', (req, res, next) => {
@@ -291,7 +259,6 @@ app.get('/admin', (req, res) => {
         <title>Visitor Dashboard</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
-          /* Minimal Black and White CSS */
           body { font-family: Arial, sans-serif; background-color: #fff; color: #000; margin: 0; padding: 20px; }
           h1, h2 { margin: 0 0 20px 0; }
           .grid { display: grid; gap: 20px; }
@@ -306,13 +273,10 @@ app.get('/admin', (req, res) => {
       </head>
       <body>
         <h1>Visitor Analytics Dashboard</h1>
-        <!-- Real-Time Visitor Counter (Fake) -->
         <div class="card" style="text-align: center;">
           <div style="font-size: 1.5rem; font-weight: bold;" id="visitorCount">0</div>
           <div>Real-Time Visitors</div>
         </div>
-
-        <!-- Charts -->
         <div class="grid grid-2">
           <div class="card">
             <h2>Visitor Countries</h2>
@@ -323,8 +287,6 @@ app.get('/admin', (req, res) => {
             <canvas id="deviceChart"></canvas>
           </div>
         </div>
-
-        <!-- Visit Log Table -->
         <div class="card">
           <h2>Visitor Log</h2>
           <table>
@@ -344,14 +306,12 @@ app.get('/admin', (req, res) => {
         </div>
 
         <script>
-          // Real-time Visitor Counter
           let counter = 0;
           setInterval(() => {
             counter++;
             document.getElementById('visitorCount').innerText = counter;
           }, 1000);
 
-          // Chart.js for Visitor Analytics
           const countryData = ${JSON.stringify(countryCount)}; 
           const deviceData = ${JSON.stringify(deviceCount)};
           
